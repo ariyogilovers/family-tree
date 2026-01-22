@@ -150,7 +150,8 @@ body {
     border-radius: 15px;
     transition: all 0.3s;
     position: relative;
-    min-width: 150px;
+    width: 150px;
+    max-width: 150px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -216,16 +217,24 @@ body {
 
 .info h3 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1rem;
+    font-size: 0.85rem;
     color: var(--neon-cyan);
     margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
 }
 
 .info p {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #aaa;
     text-transform: uppercase;
     letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
 }
 
 /* Modal Styles */

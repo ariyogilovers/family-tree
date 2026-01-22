@@ -1,8 +1,8 @@
 // Supabase Configuration
-const SUPABASE_URL = 'https://mqpouajuxjlkqnbaoqap.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcG91YWp1eGpsa3FuYmFvcWFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1NjMyMzIsImV4cCI6MjA4MDEzOTIzMn0.U70sEBWyRWsuzcezNYXTMh390WytmD0BhpowhEuUc9g';
+const SUPABASE_URL = 'https://jgsnghsreiubzoajikbd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impnc25naHNyZWl1YnpvYWppa2JkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwNDg0NzUsImV4cCI6MjA4NDYyNDQ3NX0.vR7XDTngpsPila8O7gx6ZfaaxYX_h7Mu9aLxt7b8gJ0';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let familyData = [];
 let currentMemberId = null;
@@ -56,7 +56,7 @@ function setupEventListeners() {
 // Supabase API Functions
 async function loadFamilyData() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('family')
             .select('*')
             .order('id');
@@ -77,7 +77,7 @@ async function saveMember(memberData) {
 
     try {
         if (isEdit) {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('family')
                 .update(memberData)
                 .eq('id', memberData.id)
@@ -88,7 +88,7 @@ async function saveMember(memberData) {
             return data;
         } else {
             delete memberData.id;
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('family')
                 .insert(memberData)
                 .select()
@@ -104,7 +104,7 @@ async function saveMember(memberData) {
 }
 
 async function deleteMember(id) {
-    const { error } = await supabase
+    const { error } = await supabaseClient
         .from('family')
         .delete()
         .eq('id', id);

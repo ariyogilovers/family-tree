@@ -113,7 +113,13 @@ async function deleteMember(id) {
 }
 
 // Render Functions
+// Set to track rendered member IDs to prevent duplicates
+let renderedMembers = new Set();
+
 function renderTree() {
+    // Reset tracking for each render
+    renderedMembers = new Set();
+
     if (familyData.length === 0) {
         familyTree.innerHTML = '<p style="color: #aaa; text-align: center;">Belum ada data. Klik "+ Tambah Anggota" untuk memulai.</p>';
         return;
@@ -148,13 +154,30 @@ function renderTree() {
 }
 
 function renderMemberWithChildren(member) {
+    // Skip if this member has already been rendered
+    if (renderedMembers.has(member.id)) {
+        return '';
+    }
+    renderedMembers.add(member.id);
+
     const spouse = member.spouse_id ? familyData.find(m => m.id === member.spouse_id) : null;
-    const children = familyData.filter(m => m.parent_id === member.id);
+    // Get children and sort by birth_order (1st child, 2nd child, etc.) from left to right
+    const children = familyData
+        .filter(m => m.parent_id === member.id)
+        .sort((a, b) => (a.birth_order || a.id) - (b.birth_order || b.id));
 
     let html = '<li>';
-    html += renderCard(member);
-    if (spouse && !familyData.some(m => m.parent_id === spouse.id)) {
+
+    // If has spouse, wrap both in couple-wrapper with heart connector
+    if (spouse && !renderedMembers.has(spouse.id) && !familyData.some(m => m.parent_id === spouse.id)) {
+        renderedMembers.add(spouse.id);
+        html += '<div class="couple-wrapper">';
+        html += renderCard(member);
+        html += '<div class="heart-connector"><span>♥</span></div>';
         html += renderCard(spouse, true);
+        html += '</div>';
+    } else {
+        html += renderCard(member);
     }
 
     if (children.length > 0) {
@@ -212,11 +235,16 @@ function openFormModal(id = null) {
     document.getElementById('inputHP').value = member ? (member.hp || '') : '';
     document.getElementById('inputKTP').value = member ? (member.ktp || '') : '';
     document.getElementById('inputPhoto').value = member ? (member.photo || '') : '';
-    document.getElementById('inputParent').value = member ? (member.parent_id || '') : '';
-    document.getElementById('inputSpouse').value = member ? (member.spouse_id || '') : '';
+    document.getElementById('inputBirthOrder').value = member ? (member.birth_order || 1) : 1;
     document.getElementById('inputGeneration').value = member ? (member.generation || 1) : 1;
 
+    // Populate selects FIRST, then set the selected values
     populateSelects(id);
+
+    // Set parent and spouse values AFTER populating options
+    document.getElementById('inputParent').value = member ? (member.parent_id || '') : '';
+    document.getElementById('inputSpouse').value = member ? (member.spouse_id || '') : '';
+
     formModal.style.display = 'block';
 }
 
@@ -262,6 +290,7 @@ async function handleFormSubmit(e) {
         photo: document.getElementById('inputPhoto').value || null,
         parent_id: document.getElementById('inputParent').value ? parseInt(document.getElementById('inputParent').value) : null,
         spouse_id: document.getElementById('inputSpouse').value ? parseInt(document.getElementById('inputSpouse').value) : null,
+        birth_order: parseInt(document.getElementById('inputBirthOrder').value) || 1,
         generation: parseInt(document.getElementById('inputGeneration').value) || 1
     };
 

@@ -165,19 +165,79 @@ body {
 }
 
 .card.spouse {
-    margin-left: 20px;
+    margin-left: 0;
     position: relative;
 }
 
-/* Connecting Spouses */
-.card+.card.spouse::before {
+/* Couple Wrapper - Contains both spouse cards */
+.couple-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+}
+
+/* Heart Connector between spouses */
+.heart-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    position: relative;
+}
+
+.heart-connector span {
+    font-size: 1.8rem;
+    color: #ff3366;
+    text-shadow:
+        0 0 10px #ff3366,
+        0 0 20px #ff3366,
+        0 0 30px #ff3366;
+    animation: heartbeat 1.5s ease-in-out infinite;
+    position: relative;
+    z-index: 5;
+}
+
+/* Connecting lines from heart to cards */
+.heart-connector::before,
+.heart-connector::after {
     content: '';
     position: absolute;
     top: 50%;
-    left: -20px;
-    width: 20px;
-    border-top: 2px solid var(--neon-purple);
-    box-shadow: 0 0 5px var(--neon-purple);
+    height: 2px;
+    width: 15px;
+    background: linear-gradient(90deg, var(--neon-purple), #ff3366);
+    box-shadow: 0 0 8px #ff3366;
+}
+
+.heart-connector::before {
+    left: 0;
+}
+
+.heart-connector::after {
+    right: 0;
+}
+
+@keyframes heartbeat {
+
+    0%,
+    100% {
+        transform: scale(1);
+        text-shadow:
+            0 0 10px #ff3366,
+            0 0 20px #ff3366,
+            0 0 30px #ff3366;
+    }
+
+    50% {
+        transform: scale(1.2);
+        text-shadow:
+            0 0 15px #ff3366,
+            0 0 30px #ff3366,
+            0 0 45px #ff3366,
+            0 0 60px #ff3366;
+    }
 }
 
 /* Avatar */

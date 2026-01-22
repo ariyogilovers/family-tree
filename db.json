@@ -1,0 +1,108 @@
+{
+  "family": [
+    {
+      "id": 1,
+      "name": "SB Sihite",
+      "ttl": "Jakarta, 01-01-1950",
+      "address": "Jl. Old Town No. 1",
+      "hp": "081234567890",
+      "ktp": "1234567890123456",
+      "photo": "https://i.pravatar.cc/100?img=70",
+      "role": "The Origin",
+      "parentId": null,
+      "spouseId": 2,
+      "generation": 1
+    },
+    {
+      "id": 2,
+      "name": "Tiarly Samosir",
+      "ttl": "Bandung, 02-02-1955",
+      "address": "Jl. Old Town No. 1",
+      "hp": "081234567891",
+      "ktp": "1234567890123457",
+      "photo": "https://i.pravatar.cc/100?img=47",
+      "role": "The Matriarch",
+      "parentId": null,
+      "spouseId": 1,
+      "generation": 1
+    },
+    {
+      "id": 3,
+      "name": "Uncle John",
+      "ttl": "Surabaya, 03-03-1975",
+      "address": "Jl. New City No. 5",
+      "hp": "081234567892",
+      "ktp": "1234567890123458",
+      "photo": "https://i.pravatar.cc/100?img=12",
+      "role": "Explorer",
+      "parentId": 1,
+      "spouseId": null,
+      "generation": 2
+    },
+    {
+      "id": 4,
+      "name": "Dad",
+      "ttl": "Jakarta, 04-04-1978",
+      "address": "Jl. Future Blvd No. 10",
+      "hp": "081234567893",
+      "ktp": "1234567890123459",
+      "photo": "https://i.pravatar.cc/100?img=11",
+      "role": "Architect",
+      "parentId": 1,
+      "spouseId": 5,
+      "generation": 2
+    },
+    {
+      "id": 5,
+      "name": "Mom",
+      "ttl": "Yogyakarta, 05-05-1980",
+      "address": "Jl. Future Blvd No. 10",
+      "hp": "081234567894",
+      "ktp": "1234567890123460",
+      "photo": "https://i.pravatar.cc/100?img=32",
+      "role": "Designer",
+      "parentId": null,
+      "spouseId": 4,
+      "generation": 2
+    },
+    {
+      "id": 6,
+      "name": "Aunt Jane",
+      "ttl": "Bali, 08-08-1982",
+      "address": "Jl. Beach Side No. 8",
+      "hp": "081234567897",
+      "ktp": "1234567890123463",
+      "photo": "https://i.pravatar.cc/100?img=5",
+      "role": "Scientist",
+      "parentId": 1,
+      "spouseId": null,
+      "generation": 2
+    },
+    {
+      "id": 7,
+      "name": "Me",
+      "ttl": "Jakarta, 06-06-2005",
+      "address": "Jl. Future Blvd No. 10",
+      "hp": "081234567895",
+      "ktp": "1234567890123461",
+      "photo": "https://i.pravatar.cc/100?img=33",
+      "role": "Coder",
+      "parentId": 4,
+      "spouseId": null,
+      "generation": 3
+    },
+    {
+      "id": 8,
+      "name": "Sister",
+      "ttl": "Jakarta, 07-07-2008",
+      "address": "Jl. Future Blvd No. 10",
+      "hp": "081234567896",
+      "ktp": "1234567890123462",
+      "photo": "https://i.pravatar.cc/100?img=9",
+      "role": "Artist",
+      "parentId": 4,
+      "spouseId": null,
+      "generation": 3
+    }
+  ]
+}

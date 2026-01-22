@@ -19,7 +19,33 @@ const memberForm = document.getElementById('memberForm');
 document.addEventListener('DOMContentLoaded', () => {
     loadFamilyData();
     setupEventListeners();
+    startLiveClock();
 });
+
+// Live Clock Function
+function startLiveClock() {
+    const clockElement = document.getElementById('liveClock');
+
+    function updateClock() {
+        const now = new Date();
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        const dayName = days[now.getDay()];
+        const date = now.getDate();
+        const month = months[now.getMonth()];
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+
+        clockElement.innerHTML = `${dayName}, ${date} ${month} ${year} | <span class="time">${hours}:${minutes}:${seconds}</span>`;
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+}
 
 // Setup Event Listeners
 function setupEventListeners() {
@@ -194,14 +220,36 @@ function renderMemberWithChildren(member) {
 
 function renderCard(member, isSpouse = false) {
     const photoUrl = member.photo || `https://i.pravatar.cc/100?u=${member.id}`;
+    const deceasedClass = member.is_deceased ? 'deceased' : '';
+
+    // Extract birth year from TTL (format: "City, DD-MM-YYYY" or similar)
+    let lifespan = '';
+    if (member.is_deceased && member.death_year) {
+        let birthYear = '';
+        if (member.ttl) {
+            // Try to extract year from TTL - look for 4-digit number
+            const yearMatch = member.ttl.match(/(\d{4})/);
+            if (yearMatch) {
+                birthYear = yearMatch[1];
+            }
+        }
+        if (birthYear) {
+            const age = member.death_year - parseInt(birthYear);
+            lifespan = `${birthYear} - ${member.death_year} (${age} tahun)`;
+        } else {
+            lifespan = `† ${member.death_year}`;
+        }
+    }
+
     return `
-        <div class="card ${isSpouse ? 'spouse' : ''}" data-id="${member.id}">
+        <div class="card ${isSpouse ? 'spouse' : ''} ${deceasedClass}" data-id="${member.id}">
             <div class="avatar">
                 <img src="${photoUrl}" alt="${member.name}" onerror="this.src='https://i.pravatar.cc/100?u=${member.id}'">
             </div>
             <div class="info">
                 <h3>${member.name}</h3>
                 <p>${member.role || ''}</p>
+                ${lifespan ? `<span class="lifespan">${lifespan}</span>` : ''}
             </div>
         </div>
     `;
@@ -237,6 +285,11 @@ function openFormModal(id = null) {
     document.getElementById('inputPhoto').value = member ? (member.photo || '') : '';
     document.getElementById('inputBirthOrder').value = member ? (member.birth_order || 1) : 1;
     document.getElementById('inputGeneration').value = member ? (member.generation || 1) : 1;
+    document.getElementById('inputDeceased').checked = member ? (member.is_deceased || false) : false;
+    document.getElementById('inputDeathYear').value = member ? (member.death_year || '') : '';
+
+    // Show/hide death year field based on deceased status
+    toggleDeathYear();
 
     // Populate selects FIRST, then set the selected values
     populateSelects(id);
@@ -246,6 +299,13 @@ function openFormModal(id = null) {
     document.getElementById('inputSpouse').value = member ? (member.spouse_id || '') : '';
 
     formModal.style.display = 'block';
+}
+
+// Toggle death year field visibility
+function toggleDeathYear() {
+    const isDeceased = document.getElementById('inputDeceased').checked;
+    const deathYearGroup = document.getElementById('deathYearGroup');
+    deathYearGroup.style.display = isDeceased ? 'block' : 'none';
 }
 
 function openDeleteModal(id) {
@@ -291,7 +351,9 @@ async function handleFormSubmit(e) {
         parent_id: document.getElementById('inputParent').value ? parseInt(document.getElementById('inputParent').value) : null,
         spouse_id: document.getElementById('inputSpouse').value ? parseInt(document.getElementById('inputSpouse').value) : null,
         birth_order: parseInt(document.getElementById('inputBirthOrder').value) || 1,
-        generation: parseInt(document.getElementById('inputGeneration').value) || 1
+        generation: parseInt(document.getElementById('inputGeneration').value) || 1,
+        is_deceased: document.getElementById('inputDeceased').checked,
+        death_year: document.getElementById('inputDeathYear').value ? parseInt(document.getElementById('inputDeathYear').value) : null
     };
 
     const memberId = document.getElementById('memberId').value;

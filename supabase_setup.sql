@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS family (
   spouse_id INTEGER REFERENCES family(id) ON DELETE SET NULL,
   birth_order INTEGER DEFAULT 1,
   generation INTEGER DEFAULT 1,
+  is_deceased BOOLEAN DEFAULT FALSE,
+  death_year INTEGER,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

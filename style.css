@@ -40,11 +40,41 @@ body {
     font-family: 'Orbitron', sans-serif;
     text-align: center;
     font-size: 3rem;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     color: transparent;
     -webkit-text-stroke: 1px var(--neon-cyan);
     text-shadow: 0 0 10px var(--neon-cyan);
     letter-spacing: 5px;
+}
+
+/* Live Clock */
+.live-clock {
+    font-family: 'Orbitron', sans-serif;
+    text-align: center;
+    font-size: 1rem;
+    color: var(--neon-purple);
+    margin-bottom: 25px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px var(--neon-purple);
+}
+
+.live-clock .time {
+    color: var(--neon-cyan);
+    font-weight: bold;
+    text-shadow: 0 0 10px var(--neon-cyan);
+    animation: timePulse 1s ease-in-out infinite;
+}
+
+@keyframes timePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
 }
 
 /* Add Button */
@@ -154,6 +184,55 @@ body {
     max-width: 150px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Rotating Neon Border for Living Members */
+.card:not(.deceased)::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg,
+            var(--neon-cyan),
+            var(--neon-purple),
+            var(--neon-green),
+            var(--neon-cyan));
+    background-size: 400% 400%;
+    border-radius: 17px;
+    z-index: -1;
+    animation: neonRotate 3s linear infinite;
+    opacity: 0.7;
+}
+
+.card:not(.deceased)::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: var(--bg-dark);
+    border-radius: 13px;
+    z-index: -1;
+}
+
+@keyframes neonRotate {
+    0% {
+        background-position: 0% 50%;
+        filter: hue-rotate(0deg);
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+        filter: hue-rotate(360deg);
+    }
 }
 
 .card:hover {
@@ -162,6 +241,25 @@ body {
     box-shadow: 0 0 15px var(--neon-cyan), inset 0 0 10px rgba(0, 243, 255, 0.2);
     transform: translateY(-5px) scale(1.05);
     z-index: 10;
+}
+
+/* Deceased Member Styling */
+.card.deceased {
+    opacity: 0.65;
+    border-color: rgba(150, 150, 150, 0.5);
+    box-shadow: 0 0 10px rgba(100, 100, 100, 0.3);
+    filter: grayscale(50%);
+    background: rgba(100, 100, 100, 0.15);
+}
+
+.card.deceased .avatar {
+    filter: grayscale(80%) brightness(0.8);
+}
+
+.card.deceased:hover {
+    border-color: rgba(150, 150, 150, 0.8);
+    box-shadow: 0 0 15px rgba(100, 100, 100, 0.4);
+    opacity: 0.75;
 }
 
 .card.spouse {
@@ -297,6 +395,15 @@ body {
     max-width: 110px;
 }
 
+/* Lifespan for deceased members */
+.info .lifespan {
+    display: block;
+    font-size: 0.7rem;
+    color: #888;
+    margin-top: 3px;
+    font-style: italic;
+}
+
 /* Modal Styles */
 .modal {
     display: none;
@@ -423,6 +530,31 @@ body {
 
 .form-group select option {
     background: #1a1a2e;
+}
+
+/* Custom Checkbox Styling */
+.checkbox-group {
+    margin-top: 20px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--neon-cyan);
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+    box-shadow: 0 0 10px var(--neon-cyan);
 }
 
 .form-actions {

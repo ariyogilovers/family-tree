@@ -262,22 +262,24 @@ function renderMemberWithChildren(member) {
         .filter(m => m.parent_id === member.id)
         .sort((a, b) => (a.birth_order || a.id) - (b.birth_order || b.id));
 
+    const hasChildren = children.length > 0;
+
     let html = '<li>';
 
     // If has spouse, wrap both in couple-wrapper with heart connector
     if (spouse && !renderedMembers.has(spouse.id) && !familyData.some(m => m.parent_id === spouse.id)) {
         renderedMembers.add(spouse.id);
         html += '<div class="couple-wrapper">';
-        html += renderCard(member);
+        html += renderCard(member, false, hasChildren);
         html += '<div class="heart-connector"><span>♥</span></div>';
-        html += renderCard(spouse, true);
+        html += renderCard(spouse, true, false);
         html += '</div>';
     } else {
-        html += renderCard(member);
+        html += renderCard(member, false, hasChildren);
     }
 
-    if (children.length > 0) {
-        html += '<ul>';
+    if (hasChildren) {
+        html += `<ul class="children-branch" data-parent="${member.id}">`;
         children.forEach(child => {
             html += renderMemberWithChildren(child);
         });
@@ -288,7 +290,7 @@ function renderMemberWithChildren(member) {
     return html;
 }
 
-function renderCard(member, isSpouse = false) {
+function renderCard(member, isSpouse = false, hasChildren = false) {
     const photoUrl = member.photo || `https://i.pravatar.cc/100?u=${member.id}`;
     const deceasedClass = member.is_deceased ? 'deceased' : '';
 
@@ -311,8 +313,13 @@ function renderCard(member, isSpouse = false) {
         }
     }
 
+    // Collapse button for members with children
+    const collapseBtn = hasChildren ?
+        `<button class="collapse-btn" data-parent-id="${member.id}" onclick="toggleBranch(event, ${member.id})" title="Sembunyikan/Tampilkan">▼</button>` : '';
+
     return `
         <div class="card ${isSpouse ? 'spouse' : ''} ${deceasedClass}" data-id="${member.id}">
+            ${collapseBtn}
             <div class="avatar">
                 <img src="${photoUrl}" alt="${member.name}" onerror="this.src='https://i.pravatar.cc/100?u=${member.id}'">
             </div>
@@ -323,6 +330,25 @@ function renderCard(member, isSpouse = false) {
             </div>
         </div>
     `;
+}
+
+// Toggle branch visibility
+function toggleBranch(event, parentId) {
+    event.stopPropagation(); // Prevent card click
+
+    const branch = document.querySelector(`.children-branch[data-parent="${parentId}"]`);
+    const btn = document.querySelector(`.collapse-btn[data-parent-id="${parentId}"]`);
+
+    if (branch) {
+        branch.classList.toggle('collapsed');
+        if (branch.classList.contains('collapsed')) {
+            btn.textContent = '▶';
+            btn.title = 'Tampilkan';
+        } else {
+            btn.textContent = '▼';
+            btn.title = 'Sembunyikan';
+        }
+    }
 }
 
 // Modal Functions

@@ -250,7 +250,43 @@ body {
     max-width: 120px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    overflow: visible;
+}
+
+/* Collapse Button */
+.collapse-btn {
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--neon-cyan);
+    background: var(--bg-dark);
+    color: var(--neon-cyan);
+    font-size: 0.7rem;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 15;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.collapse-btn:hover {
+    background: rgba(0, 243, 255, 0.3);
+    box-shadow: 0 0 10px var(--neon-cyan);
+    transform: translateX(-50%) scale(1.1);
+}
+
+/* Collapsed State */
+.children-branch {
+    transition: all 0.3s ease;
+}
+
+.children-branch.collapsed {
+    display: none !important;
 }
 
 /* Rotating Neon Border for Living Members */

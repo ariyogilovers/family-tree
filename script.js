@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFamilyData();
     setupEventListeners();
     startLiveClock();
+    setupZoomControls();
 });
 
 // Live Clock Function
@@ -45,6 +46,75 @@ function startLiveClock() {
 
     updateClock();
     setInterval(updateClock, 1000);
+}
+
+// Zoom Control
+let currentZoom = 100;
+const minZoom = 30;
+const maxZoom = 150;
+const zoomStep = 10;
+
+function setupZoomControls() {
+    const zoomIn = document.getElementById('zoomIn');
+    const zoomOut = document.getElementById('zoomOut');
+    const zoomReset = document.getElementById('zoomReset');
+    const zoomLevel = document.getElementById('zoomLevel');
+    const tree = document.getElementById('familyTree');
+
+    function updateZoom() {
+        tree.style.transform = `scale(${currentZoom / 100})`;
+        tree.style.transformOrigin = 'top center';
+        zoomLevel.textContent = `${currentZoom}%`;
+    }
+
+    zoomIn.addEventListener('click', () => {
+        if (currentZoom < maxZoom) {
+            currentZoom += zoomStep;
+            updateZoom();
+        }
+    });
+
+    zoomOut.addEventListener('click', () => {
+        if (currentZoom > minZoom) {
+            currentZoom -= zoomStep;
+            updateZoom();
+        }
+    });
+
+    zoomReset.addEventListener('click', () => {
+        currentZoom = 100;
+        updateZoom();
+    });
+
+    // Touch gesture for pinch zoom on mobile
+    let initialDistance = 0;
+    tree.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            initialDistance = Math.hypot(
+                e.touches[0].pageX - e.touches[1].pageX,
+                e.touches[0].pageY - e.touches[1].pageY
+            );
+        }
+    });
+
+    tree.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2) {
+            const currentDistance = Math.hypot(
+                e.touches[0].pageX - e.touches[1].pageX,
+                e.touches[0].pageY - e.touches[1].pageY
+            );
+            const diff = currentDistance - initialDistance;
+            if (Math.abs(diff) > 20) {
+                if (diff > 0 && currentZoom < maxZoom) {
+                    currentZoom += 5;
+                } else if (diff < 0 && currentZoom > minZoom) {
+                    currentZoom -= 5;
+                }
+                updateZoom();
+                initialDistance = currentDistance;
+            }
+        }
+    });
 }
 
 // Setup Event Listeners

@@ -147,6 +147,31 @@ function setupEventListeners() {
             e.target.style.display = 'none';
         }
     });
+
+    // Image Popup Handlers
+    const imageModal = document.getElementById('imageModal');
+    const fullImage = document.getElementById('fullImage');
+    const closeImageModal = document.getElementById('closeImageModal');
+    const modalPhoto = document.getElementById('modalPhoto');
+
+    if (modalPhoto) {
+        modalPhoto.parentElement.addEventListener('click', () => {
+            imageModal.style.display = 'flex';
+            fullImage.src = modalPhoto.src;
+        });
+    }
+
+    if (closeImageModal) {
+        closeImageModal.addEventListener('click', () => {
+            imageModal.style.display = 'none';
+        });
+    }
+
+    imageModal.addEventListener('click', (e) => {
+        if (e.target === imageModal) {
+            imageModal.style.display = 'none';
+        }
+    });
 }
 
 // Supabase API Functions
@@ -357,6 +382,15 @@ function openInfoModal(id) {
     if (!member) return;
 
     currentMemberId = id;
+
+    // Set photo
+    const photoUrl = member.photo || `https://i.pravatar.cc/150?u=${member.id}`;
+    const modalPhoto = document.getElementById('modalPhoto');
+    modalPhoto.src = photoUrl;
+    modalPhoto.onerror = function () {
+        this.src = `https://i.pravatar.cc/150?u=${member.id}`;
+    };
+
     document.getElementById('modalName').textContent = member.name;
     document.getElementById('modalTTL').textContent = member.ttl || '-';
     document.getElementById('modalAddress').textContent = member.address || '-';

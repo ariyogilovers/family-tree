@@ -38,6 +38,9 @@
     <div id="infoModal" class="modal">
         <div class="modal-content">
             <span class="close" data-modal="infoModal">&times;</span>
+            <div class="modal-avatar">
+                <img id="modalPhoto" src="" alt="Foto Profile">
+            </div>
             <h2 id="modalName">Name</h2>
             <div class="modal-body">
                 <p><strong>TTL:</strong> <span id="modalTTL"></span></p>
@@ -136,6 +139,12 @@
                 <button class="btn-cancel" data-modal="deleteModal">Batal</button>
             </div>
         </div>
+    </div>
+
+    <!-- Image Popup Modal -->
+    <div id="imageModal" class="modal image-modal-overlay">
+        <span class="close-image" id="closeImageModal">&times;</span>
+        <img class="modal-content-image" id="fullImage">
     </div>
 
     <script src="script.js"></script>

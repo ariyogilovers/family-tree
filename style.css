@@ -486,6 +486,19 @@ body {
     max-width: 95px;
 }
 
+.marga-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan));
+    color: #fff;
+    font-size: 0.6rem;
+    border-radius: 4px;
+    margin: 2px 0;
+    text-transform: uppercase;
+    font-weight: bold;
+    box-shadow: 0 0 5px rgba(188, 19, 254, 0.4);
+}
+
 .info p {
     font-size: 0.75rem;
     color: #aaa;

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS family (
   ktp TEXT,
   photo TEXT,
   role TEXT,
+  marga TEXT,
   parent_id INTEGER REFERENCES family(id) ON DELETE SET NULL,
   spouse_id INTEGER REFERENCES family(id) ON DELETE SET NULL,
   birth_order INTEGER DEFAULT 1,

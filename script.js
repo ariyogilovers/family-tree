@@ -6,6 +6,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 let familyData = [];
 let currentMemberId = null;
+let currentMarga = 'Sihite'; // Default Marga
 
 // DOM Elements
 const familyTree = document.getElementById('familyTree');
@@ -14,6 +15,7 @@ const infoModal = document.getElementById('infoModal');
 const formModal = document.getElementById('formModal');
 const deleteModal = document.getElementById('deleteModal');
 const memberForm = document.getElementById('memberForm');
+const pageTitle = document.getElementById('pageTitle');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -86,7 +88,7 @@ function setupZoomControls() {
         updateZoom();
     });
 
-    // Touch gesture for pinch zoom on mobile
+    // Touch gesture for pinch zoom
     let initialDistance = 0;
     tree.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
@@ -193,14 +195,62 @@ async function loadFamilyData() {
     }
 }
 
+async function handleFormSubmit(e) {
+    e.preventDefault();
+
+    // Visual feedback
+    const saveBtn = document.querySelector('.btn-save');
+    const originalText = saveBtn.textContent;
+    saveBtn.textContent = 'Menyimpan...';
+
+    const data = {
+        name: document.getElementById('inputName').value,
+        role: document.getElementById('inputRole').value || null,
+        marga: document.getElementById('inputMarga').value || null,
+        ttl: document.getElementById('inputTTL').value || null,
+        address: document.getElementById('inputAddress').value || null,
+        hp: document.getElementById('inputHP').value || null,
+        ktp: document.getElementById('inputKTP').value || null,
+        photo: document.getElementById('inputPhoto').value || null,
+        parent_id: document.getElementById('inputParent').value ? parseInt(document.getElementById('inputParent').value) : null,
+        spouse_id: document.getElementById('inputSpouse').value ? parseInt(document.getElementById('inputSpouse').value) : null,
+        birth_order: parseInt(document.getElementById('inputBirthOrder').value) || 1,
+        generation: parseInt(document.getElementById('inputGeneration').value) || 1,
+        is_deceased: document.getElementById('inputDeceased').checked,
+        death_year: document.getElementById('inputDeathYear').value ? parseInt(document.getElementById('inputDeathYear').value) : null
+    };
+
+    const memberId = document.getElementById('memberId').value;
+    if (memberId) {
+        data.id = parseInt(memberId);
+    }
+
+    try {
+        await saveMember(data);
+        closeModal('formModal');
+        await loadFamilyData();
+        saveBtn.textContent = originalText;
+        // Optional: alert('Data berhasil disimpan!'); 
+    } catch (error) {
+        console.error('Failed to save:', error);
+        alert('Gagal menyimpan data: ' + error.message);
+        saveBtn.textContent = originalText;
+    }
+}
+
 async function saveMember(memberData) {
     const isEdit = memberData.id;
 
     try {
         if (isEdit) {
+            // For update, Remove ID from payload to avoid PK conflicts/issues
+            const updatePayload = { ...memberData };
+            delete updatePayload.id;
+            delete updatePayload.created_at; // Safety check
+
             const { data, error } = await supabaseClient
                 .from('family')
-                .update(memberData)
+                .update(updatePayload)
                 .eq('id', memberData.id)
                 .select()
                 .single();
@@ -208,10 +258,12 @@ async function saveMember(memberData) {
             if (error) throw error;
             return data;
         } else {
-            delete memberData.id;
+            const insertPayload = { ...memberData };
+            delete insertPayload.id; // Let DB handle ID generation
+
             const { data, error } = await supabaseClient
                 .from('family')
-                .insert(memberData)
+                .insert(insertPayload)
                 .select()
                 .single();
 
@@ -233,66 +285,130 @@ async function deleteMember(id) {
     if (error) throw error;
 }
 
+// Navigation Logic
+function switchMarga(margaName) {
+    if (!margaName) return;
+    currentMarga = margaName;
+    pageTitle.textContent = `KELUARGA ${currentMarga.toUpperCase()}`;
+
+    // Reset zoom or position if needed? For now just re-render
+    renderTree();
+
+    // Visual feedback (optional)
+    console.log(`Switched to Marga: ${margaName}`);
+}
+
 // Render Functions
-// Set to track rendered member IDs to prevent duplicates
 let renderedMembers = new Set();
 
 function renderTree() {
-    // Reset tracking for each render
     renderedMembers = new Set();
+    familyTree.innerHTML = ''; // Clear previous
 
     if (familyData.length === 0) {
         familyTree.innerHTML = '<p style="color: #aaa; text-align: center;">Belum ada data. Klik "+ Tambah Anggota" untuk memulai.</p>';
         return;
     }
 
-    const generations = {};
-    familyData.forEach(member => {
-        const gen = member.generation || 1;
-        if (!generations[gen]) generations[gen] = [];
-        generations[gen].push(member);
+    // Identifikasi Root untuk Marga saat ini
+    // Logika: Cari anggota yang:
+    // 1. Marga-nya cocok dengan currentMarga (Jika null, dianggap 'Sihite')
+    // 2. TIDAK punya orang tua di database, ATAU orang tuanya memiliki marga yang berbeda
+    const roots = familyData.filter(m => {
+        // Treat null/empty as 'Sihite' for backward compatibility
+        const memberMarga = m.marga || 'Sihite';
+        const isCurrentMarga = memberMarga.toLowerCase() === currentMarga.toLowerCase();
+
+        if (!isCurrentMarga) return false;
+
+        const parent = m.parent_id ? familyData.find(p => p.id === m.parent_id) : null;
+
+        // Check parent's marga (also default to Sihite)
+        const parentMarga = parent ? (parent.marga || 'Sihite') : null;
+        const parentHasDifferentMarga = parent && parentMarga.toLowerCase() !== currentMarga.toLowerCase();
+
+        return !m.parent_id || parentHasDifferentMarga || !parent;
     });
 
-    let html = '<ul>';
+    // Jika tidak ada root spesifik (misal data kosong untuk marga ini), coba cari yang mengandung nama marga di Role atau Nama sebagai fallback?
+    // Atau tampilkan pesan kosong.
+    if (roots.length === 0) {
+        // Fallback: Show all Generation 1 if default
+        if (currentMarga === 'Sihite' && familyData.some(m => !m.marga)) {
+            // Legacy support: if no marga set, assume Generation 1 are roots
+            const gen1 = familyData.filter(m => m.generation === 1);
+            let html = '<ul>';
+            // Find main root (male usually)
+            const mainRoot = gen1.find(m => (!m.spouse_id || m.id < m.spouse_id) && !m.parent_id) || gen1[0];
+            if (mainRoot) html += renderMemberWithChildren(mainRoot);
+            html += '</ul>';
+            familyTree.innerHTML = html;
 
-    const roots = generations[1] || [];
-    const mainRoot = roots.find(m => !m.spouse_id || m.id < m.spouse_id) || roots[0];
+            // CRITICAL: Attach handlers before returning!
+            setupCardClickHandlers();
+            return;
+        }
 
-    if (mainRoot) {
-        html += renderMemberWithChildren(mainRoot);
+        familyTree.innerHTML = `<p style="color: #aaa; text-align: center;">Tidak ada data untuk Marga ${currentMarga}.</p>`;
+        return;
     }
 
+    // Sort roots by generation to ensure oldest are top
+    roots.sort((a, b) => (a.generation || 1) - (b.generation || 1));
+
+    let html = '<ul>';
+    // Render each independent root found for this Marga
+    roots.forEach(root => {
+        // Only render if not already rendered (connections might cause duplicates)
+        if (!renderedMembers.has(root.id)) {
+            html += renderMemberWithChildren(root);
+        }
+    });
     html += '</ul>';
     familyTree.innerHTML = html;
 
-    document.querySelectorAll('.card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            if (!e.target.closest('.card-actions')) {
-                openInfoModal(parseInt(card.dataset.id));
-            }
-        });
-    });
+    setupCardClickHandlers();
 }
 
 function renderMemberWithChildren(member) {
-    // Skip if this member has already been rendered
-    if (renderedMembers.has(member.id)) {
-        return '';
-    }
+    if (renderedMembers.has(member.id)) return '';
     renderedMembers.add(member.id);
 
     const spouse = member.spouse_id ? familyData.find(m => m.id === member.spouse_id) : null;
-    // Get children and sort by birth_order (1st child, 2nd child, etc.) from left to right
+
+    // Children: Filter those who have this member OR the spouse as parent
+    // AND belong to the current Marga (Patrilineal logic)
     const children = familyData
-        .filter(m => m.parent_id === member.id)
+        .filter(m => {
+            // 1. Must be child of member or spouse
+            const isChild = m.parent_id === member.id || (spouse && m.parent_id === spouse.id);
+            if (!isChild) return false;
+
+            // 2. Marga Check
+            // If child has specific marga, it must match current view
+            if (m.marga) {
+                return m.marga.toLowerCase() === currentMarga.toLowerCase();
+            }
+
+            // If child has NO marga, check the parent they are linked to
+            // They inherit the marga of the parent found in parent_id
+            const parent = familyData.find(p => p.id === m.parent_id);
+            if (parent) {
+                const parentMarga = parent.marga || 'Sihite'; // Default to Sihite if null
+                return parentMarga.toLowerCase() === currentMarga.toLowerCase();
+            }
+
+            return false;
+        })
         .sort((a, b) => (a.birth_order || a.id) - (b.birth_order || b.id));
 
     const hasChildren = children.length > 0;
 
     let html = '<li>';
 
-    // If has spouse, wrap both in couple-wrapper with heart connector
-    if (spouse && !renderedMembers.has(spouse.id) && !familyData.some(m => m.parent_id === spouse.id)) {
+    // Render Couple
+    // Removed the check that hid spouse if they were a parent (!familyData.some...)
+    if (spouse && !renderedMembers.has(spouse.id)) {
         renderedMembers.add(spouse.id);
         html += '<div class="couple-wrapper">';
         html += renderCard(member, false, hasChildren);
@@ -319,31 +435,29 @@ function renderCard(member, isSpouse = false, hasChildren = false) {
     const photoUrl = member.photo || `https://i.pravatar.cc/100?u=${member.id}`;
     const deceasedClass = member.is_deceased ? 'deceased' : '';
 
-    // Extract birth year from TTL (format: "City, DD-MM-YYYY" or similar)
     let lifespan = '';
     if (member.is_deceased && member.death_year) {
         let birthYear = '';
         if (member.ttl) {
-            // Try to extract year from TTL - look for 4-digit number
             const yearMatch = member.ttl.match(/(\d{4})/);
-            if (yearMatch) {
-                birthYear = yearMatch[1];
-            }
+            if (yearMatch) birthYear = yearMatch[1];
         }
         if (birthYear) {
             const age = member.death_year - parseInt(birthYear);
-            lifespan = `${birthYear} - ${member.death_year} (${age} tahun)`;
+            lifespan = `${birthYear} - ${member.death_year} (${age} thn)`;
         } else {
             lifespan = `† ${member.death_year}`;
         }
     }
 
-    // Collapse button for members with children
     const collapseBtn = hasChildren ?
         `<button class="collapse-btn" data-parent-id="${member.id}" onclick="toggleBranch(event, ${member.id})" title="Sembunyikan/Tampilkan">▼</button>` : '';
 
+    // Marga Badge (Optional, but helps visualize)
+    const margaDisplay = member.marga ? `<span class="marga-badge">${member.marga}</span>` : '';
+
     return `
-        <div class="card ${isSpouse ? 'spouse' : ''} ${deceasedClass}" data-id="${member.id}">
+        <div class="card ${isSpouse ? 'spouse' : ''} ${deceasedClass}" data-id="${member.id}" data-marga="${member.marga || ''}">
             ${collapseBtn}
             <div class="avatar">
                 <img src="${photoUrl}" alt="${member.name}" onerror="this.src='https://i.pravatar.cc/100?u=${member.id}'">
@@ -351,16 +465,36 @@ function renderCard(member, isSpouse = false, hasChildren = false) {
             <div class="info">
                 <h3>${member.name}</h3>
                 <p>${member.role || ''}</p>
+                ${margaDisplay}
                 ${lifespan ? `<span class="lifespan">${lifespan}</span>` : ''}
             </div>
         </div>
     `;
 }
 
-// Toggle branch visibility
-function toggleBranch(event, parentId) {
-    event.stopPropagation(); // Prevent card click
+function setupCardClickHandlers() {
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.collapse-btn')) return; // Ignore collapse button
 
+            const id = parseInt(card.dataset.id);
+            const memberMarga = card.dataset.marga;
+
+            // Logic: 
+            // 1. If member has a Marga AND it's different from current view -> Switch View
+            // 2. Otherwise -> Show Details
+
+            if (memberMarga && memberMarga.toLowerCase() !== currentMarga.toLowerCase()) {
+                switchMarga(memberMarga);
+            } else {
+                openInfoModal(id);
+            }
+        });
+    });
+}
+
+function toggleBranch(event, parentId) {
+    event.stopPropagation();
     const branch = document.querySelector(`.children-branch[data-parent="${parentId}"]`);
     const btn = document.querySelector(`.collapse-btn[data-parent-id="${parentId}"]`);
 
@@ -368,10 +502,8 @@ function toggleBranch(event, parentId) {
         branch.classList.toggle('collapsed');
         if (branch.classList.contains('collapsed')) {
             btn.textContent = '▶';
-            btn.title = 'Tampilkan';
         } else {
             btn.textContent = '▼';
-            btn.title = 'Sembunyikan';
         }
     }
 }
@@ -383,7 +515,6 @@ function openInfoModal(id) {
 
     currentMemberId = id;
 
-    // Set photo
     const photoUrl = member.photo || `https://i.pravatar.cc/150?u=${member.id}`;
     const modalPhoto = document.getElementById('modalPhoto');
     modalPhoto.src = photoUrl;
@@ -395,7 +526,15 @@ function openInfoModal(id) {
     document.getElementById('modalTTL').textContent = member.ttl || '-';
     document.getElementById('modalAddress').textContent = member.address || '-';
     document.getElementById('modalHP').textContent = member.hp || '-';
-    document.getElementById('modalKTP').textContent = member.ktp || '-';
+
+    // Mask KTP: Show only front part, hide last 4 digits
+    let ktpDisplay = '-';
+    if (member.ktp && member.ktp.length > 4) {
+        ktpDisplay = member.ktp.slice(0, -4) + 'XXXX';
+    } else {
+        ktpDisplay = member.ktp || '-';
+    }
+    document.getElementById('modalKTP').textContent = ktpDisplay;
 
     infoModal.style.display = 'block';
 }
@@ -408,6 +547,7 @@ function openFormModal(id = null) {
     document.getElementById('memberId').value = member ? member.id : '';
     document.getElementById('inputName').value = member ? member.name : '';
     document.getElementById('inputRole').value = member ? (member.role || '') : '';
+    document.getElementById('inputMarga').value = member ? (member.marga || '') : ''; // New Field
     document.getElementById('inputTTL').value = member ? (member.ttl || '') : '';
     document.getElementById('inputAddress').value = member ? (member.address || '') : '';
     document.getElementById('inputHP').value = member ? (member.hp || '') : '';
@@ -418,20 +558,29 @@ function openFormModal(id = null) {
     document.getElementById('inputDeceased').checked = member ? (member.is_deceased || false) : false;
     document.getElementById('inputDeathYear').value = member ? (member.death_year || '') : '';
 
-    // Show/hide death year field based on deceased status
     toggleDeathYear();
-
-    // Populate selects FIRST, then set the selected values
     populateSelects(id);
 
     // Set parent and spouse values AFTER populating options
-    document.getElementById('inputParent').value = member ? (member.parent_id || '') : '';
-    document.getElementById('inputSpouse').value = member ? (member.spouse_id || '') : '';
+    const parentVal = member ? member.parent_id : '';
+    const spouseVal = member ? member.spouse_id : '';
+
+    // Explicitly select the option
+    if (parentVal) {
+        document.getElementById('inputParent').value = parentVal;
+    } else {
+        document.getElementById('inputParent').value = "";
+    }
+
+    if (spouseVal) {
+        document.getElementById('inputSpouse').value = spouseVal;
+    } else {
+        document.getElementById('inputSpouse').value = "";
+    }
 
     formModal.style.display = 'block';
 }
 
-// Toggle death year field visibility
 function toggleDeathYear() {
     const isDeceased = document.getElementById('inputDeceased').checked;
     const deathYearGroup = document.getElementById('deathYearGroup');
@@ -466,40 +615,7 @@ function populateSelects(excludeId = null) {
     });
 }
 
-// Form Handlers
-async function handleFormSubmit(e) {
-    e.preventDefault();
-
-    const data = {
-        name: document.getElementById('inputName').value,
-        role: document.getElementById('inputRole').value || null,
-        ttl: document.getElementById('inputTTL').value || null,
-        address: document.getElementById('inputAddress').value || null,
-        hp: document.getElementById('inputHP').value || null,
-        ktp: document.getElementById('inputKTP').value || null,
-        photo: document.getElementById('inputPhoto').value || null,
-        parent_id: document.getElementById('inputParent').value ? parseInt(document.getElementById('inputParent').value) : null,
-        spouse_id: document.getElementById('inputSpouse').value ? parseInt(document.getElementById('inputSpouse').value) : null,
-        birth_order: parseInt(document.getElementById('inputBirthOrder').value) || 1,
-        generation: parseInt(document.getElementById('inputGeneration').value) || 1,
-        is_deceased: document.getElementById('inputDeceased').checked,
-        death_year: document.getElementById('inputDeathYear').value ? parseInt(document.getElementById('inputDeathYear').value) : null
-    };
-
-    const memberId = document.getElementById('memberId').value;
-    if (memberId) {
-        data.id = parseInt(memberId);
-    }
-
-    try {
-        await saveMember(data);
-        closeModal('formModal');
-        await loadFamilyData();
-    } catch (error) {
-        console.error('Failed to save:', error);
-        alert('Gagal menyimpan data: ' + error.message);
-    }
-}
+// Duplicate removed
 
 async function handleDelete() {
     if (!currentMemberId) return;

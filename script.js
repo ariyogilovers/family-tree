@@ -18,16 +18,186 @@ const memberForm = document.getElementById('memberForm');
 const pageTitle = document.getElementById('pageTitle');
 
 // Initialize
+// Auth State
+let currentUser = null;
+
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    checkUser(); // Check auth first
     loadFamilyData();
+    setupEventListeners();
     setupEventListeners();
     startLiveClock();
     setupZoomControls();
+    setupMusicControl();
+
+    // Auth Listener
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        currentUser = session?.user || null;
+        updateUIForAuth();
+    });
 });
+
+async function checkUser() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    currentUser = session?.user || null;
+    updateUIForAuth();
+}
+
+function updateUIForAuth() {
+    const isAdmin = !!currentUser;
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const addBtn = document.getElementById('addMemberBtn');
+    const userEmailSpan = document.getElementById('userEmail');
+
+    if (isAdmin) {
+        document.body.classList.add('is-admin');
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'block';
+        addBtn.style.display = 'inline-block';
+
+        // Show Email
+        if (userEmailSpan) {
+            userEmailSpan.textContent = currentUser.email;
+            userEmailSpan.style.display = 'inline-block';
+        }
+    } else {
+        document.body.classList.remove('is-admin');
+        loginBtn.style.display = 'block';
+        logoutBtn.style.display = 'none';
+        addBtn.style.display = 'none';
+
+        // Hide Email
+        if (userEmailSpan) {
+            userEmailSpan.style.display = 'none';
+            userEmailSpan.textContent = '';
+        }
+    }
+}
+
+// Setup Event Listeners
+function setupEventListeners() {
+    addMemberBtn.addEventListener('click', () => openFormModal());
+
+    // Auth Event Listeners
+    document.getElementById('loginBtn')?.addEventListener('click', () => {
+        document.getElementById('loginModal').style.display = 'block';
+    });
+
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+        await supabaseClient.auth.signOut();
+        // UI updates automatically via onAuthStateChange
+    });
+
+    document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
+
+    // Dev Signup (Quick way for user to register their first admin)
+    document.getElementById('devSignup')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        if (!email || !password) {
+            alert('Isi Email dan Password dulu untuk mendaftar!');
+            return;
+        }
+
+        try {
+            const { data, error } = await supabaseClient.auth.signUp({
+                email,
+                password,
+            });
+            if (error) throw error;
+            alert('Pendaftaran berhasil! Silakan Login sekarang.');
+        } catch (err) {
+            alert('Gagal daftar: ' + err.message);
+        }
+    });
+
+    document.querySelectorAll('.close, .btn-cancel').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modalId = btn.getAttribute('data-modal');
+            if (modalId) closeModal(modalId);
+        });
+    });
+
+    memberForm.addEventListener('submit', handleFormSubmit);
+
+    document.getElementById('editFromDetail').addEventListener('click', () => {
+        closeModal('infoModal');
+        openFormModal(currentMemberId);
+    });
+
+    document.getElementById('deleteFromDetail').addEventListener('click', () => {
+        closeModal('infoModal');
+        openDeleteModal(currentMemberId);
+    });
+
+    document.getElementById('confirmDelete').addEventListener('click', handleDelete);
+
+    window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+            e.target.style.display = 'none';
+        }
+    });
+
+    // Image Popup Handlers
+    const imageModal = document.getElementById('imageModal');
+    const fullImage = document.getElementById('fullImage');
+    const closeImageModal = document.getElementById('closeImageModal');
+    const modalPhoto = document.getElementById('modalPhoto');
+
+    if (modalPhoto) {
+        modalPhoto.parentElement.addEventListener('click', () => {
+            imageModal.style.display = 'flex';
+            fullImage.src = modalPhoto.src;
+        });
+    }
+
+    if (closeImageModal) {
+        closeImageModal.addEventListener('click', () => {
+            imageModal.style.display = 'none';
+        });
+    }
+
+    imageModal.addEventListener('click', (e) => {
+        if (e.target === imageModal) {
+            imageModal.style.display = 'none';
+        }
+    });
+}
+
+// Auth Functions
+async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const btn = e.target.querySelector('button');
+    const oldText = btn.textContent;
+    btn.textContent = 'Verifying...';
+
+    try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) throw error;
+
+        closeModal('loginModal');
+        // UI updates via onAuthStateChange
+    } catch (error) {
+        alert('Login Gagal: ' + error.message);
+    } finally {
+        btn.textContent = oldText;
+    }
+}
 
 // Live Clock Function
 function startLiveClock() {
     const clockElement = document.getElementById('liveClock');
+    if (!clockElement) return;
 
     function updateClock() {
         const now = new Date();
@@ -50,6 +220,46 @@ function startLiveClock() {
     setInterval(updateClock, 1000);
 }
 
+// Music Control
+function setupMusicControl() {
+    const musicBtn = document.getElementById('musicBtn');
+    const audio = document.getElementById('spaceAudio');
+    let isPlaying = false;
+
+    if (!musicBtn || !audio) return;
+
+    // Set volume low for ambiance
+    audio.volume = 0.3;
+
+    function toggleMusic() {
+        if (isPlaying) {
+            audio.pause();
+            musicBtn.classList.remove('playing');
+            musicBtn.innerHTML = '🎵'; // Play icon (stopped)
+            musicBtn.title = "Play Music";
+        } else {
+            audio.play().then(() => {
+                musicBtn.classList.add('playing');
+                musicBtn.innerHTML = '🔊'; // Sound icon (playing)
+                musicBtn.title = "Pause Music";
+            }).catch(e => {
+                console.log("Audio play failed:", e);
+                // Usually due to browser policy, user needs to interact first
+                alert("Klik OK untuk memutar musik luar angkasa 🎵");
+                audio.play();
+                musicBtn.classList.add('playing');
+                musicBtn.innerHTML = '🔊';
+            });
+        }
+        isPlaying = !isPlaying;
+    }
+
+    musicBtn.addEventListener('click', toggleMusic);
+
+    // Try autoplay silently? No, browsers block it.
+    // Let's rely on the button.
+}
+
 // Zoom Control
 let currentZoom = 100;
 const minZoom = 30;
@@ -62,6 +272,8 @@ function setupZoomControls() {
     const zoomReset = document.getElementById('zoomReset');
     const zoomLevel = document.getElementById('zoomLevel');
     const tree = document.getElementById('familyTree');
+
+    if (!zoomIn) return; // safety check
 
     function updateZoom() {
         tree.style.transform = `scale(${currentZoom / 100})`;
@@ -115,63 +327,6 @@ function setupZoomControls() {
                 updateZoom();
                 initialDistance = currentDistance;
             }
-        }
-    });
-}
-
-// Setup Event Listeners
-function setupEventListeners() {
-    addMemberBtn.addEventListener('click', () => openFormModal());
-
-    document.querySelectorAll('.close, .btn-cancel').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const modalId = btn.getAttribute('data-modal');
-            if (modalId) closeModal(modalId);
-        });
-    });
-
-    memberForm.addEventListener('submit', handleFormSubmit);
-
-    document.getElementById('editFromDetail').addEventListener('click', () => {
-        closeModal('infoModal');
-        openFormModal(currentMemberId);
-    });
-
-    document.getElementById('deleteFromDetail').addEventListener('click', () => {
-        closeModal('infoModal');
-        openDeleteModal(currentMemberId);
-    });
-
-    document.getElementById('confirmDelete').addEventListener('click', handleDelete);
-
-    window.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal')) {
-            e.target.style.display = 'none';
-        }
-    });
-
-    // Image Popup Handlers
-    const imageModal = document.getElementById('imageModal');
-    const fullImage = document.getElementById('fullImage');
-    const closeImageModal = document.getElementById('closeImageModal');
-    const modalPhoto = document.getElementById('modalPhoto');
-
-    if (modalPhoto) {
-        modalPhoto.parentElement.addEventListener('click', () => {
-            imageModal.style.display = 'flex';
-            fullImage.src = modalPhoto.src;
-        });
-    }
-
-    if (closeImageModal) {
-        closeImageModal.addEventListener('click', () => {
-            imageModal.style.display = 'none';
-        });
-    }
-
-    imageModal.addEventListener('click', (e) => {
-        if (e.target === imageModal) {
-            imageModal.style.display = 'none';
         }
     });
 }

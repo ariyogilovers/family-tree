@@ -16,10 +16,37 @@
 </head>
 
 <body>
+    <!-- Space Background -->
+    <div class="space-background">
+        <div class="stars-small"></div>
+        <div class="stars-medium"></div>
+        <div class="stars-large"></div>
+        <div class="planet-1"></div>
+        <div class="nebula-1"></div>
+        <!-- Shooting Star lines -->
+        <span class="shooting-star"></span>
+        <span class="shooting-star"></span>
+        <span class="shooting-star"></span>
+    </div>
+
     <div class="container">
         <h1 class="title" id="pageTitle">KELUARGA SIHITE</h1>
+
+        <!-- Auth Buttons -->
+        <div class="auth-controls">
+            <!-- Music Control -->
+            <button id="musicBtn" class="btn-auth btn-music" title="Play/Pause Music">🎵</button>
+            <audio id="spaceAudio" loop>
+                <source src="assets/space_music.mp3" type="audio/mpeg">
+            </audio>
+
+            <span id="userEmail" class="user-email" style="display: none;"></span>
+            <button id="loginBtn" class="btn-auth">Login Admin</button>
+            <button id="logoutBtn" class="btn-auth" style="display: none;">Logout</button>
+        </div>
+
         <div id="liveClock" class="live-clock"></div>
-        <button id="addMemberBtn" class="btn-add">+ Tambah Anggota</button>
+        <button id="addMemberBtn" class="btn-add" style="display: none;">+ Tambah Anggota</button>
 
         <!-- Zoom Controls -->
         <div class="zoom-controls">
@@ -149,6 +176,32 @@
     <div id="imageModal" class="modal image-modal-overlay">
         <span class="close-image" id="closeImageModal">&times;</span>
         <img class="modal-content-image" id="fullImage">
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content form-modal" style="max-width: 400px;">
+            <span class="close" data-modal="loginModal">&times;</span>
+            <h2>Login Admin</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">Login</button>
+                </div>
+                <!-- Dev Note: User must sign up manually via Supabase Console or I should provide a temp signup button -->
+                <p style="margin-top:15px; font-size: 0.8rem; color: #888; text-align: center;">
+                    Belum punya akun? <a href="#" id="devSignup" style="color: var(--neon-cyan);">Daftar disini</a> (Dev
+                    Mode)
+                </p>
+            </form>
+        </div>
     </div>
 
     <script src="script.js"></script>

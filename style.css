@@ -17,11 +17,6 @@
 
 body {
     background-color: var(--bg-dark);
-    background-image:
-        radial-gradient(circle at 50% 0%, #1a1a2e 0%, var(--bg-dark) 50%),
-        linear-gradient(0deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
-    background-size: 100% 100%, 50px 50px, 50px 50px;
     font-family: 'Rajdhani', sans-serif;
     color: #fff;
     min-height: 100vh;
@@ -30,6 +25,214 @@ body {
     align-items: flex-start;
     overflow-x: auto;
     padding: 50px;
+    position: relative;
+    /* For z-index context */
+}
+
+/* --- Space Animations --- */
+.space-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+    pointer-events: none;
+}
+
+/* Box Shadow Stars Generator */
+.stars-small {
+    width: 1px;
+    height: 1px;
+    background: transparent;
+    box-shadow: 1744px 122px #FFF, 134px 1321px #FFF, 92px 859px #FFF, 122px 144px #FFF, 854px 1264px #FFF, 1264px 854px #FFF, 764px 34px #FFF, 42px 764px #FFF, 1744px 1744px #FFF;
+    animation: animStar 50s linear infinite;
+}
+
+.stars-small:after {
+    content: " ";
+    position: absolute;
+    top: 2000px;
+    width: 1px;
+    height: 1px;
+    background: transparent;
+    box-shadow: 1744px 122px #FFF, 134px 1321px #FFF, 92px 859px #FFF, 122px 144px #FFF, 854px 1264px #FFF, 1264px 854px #FFF, 764px 34px #FFF, 42px 764px #FFF, 1744px 1744px #FFF;
+}
+
+.stars-medium {
+    width: 2px;
+    height: 2px;
+    background: transparent;
+    box-shadow: 644px 322px #FFF, 934px 621px #FFF, 192px 259px #FFF, 1854px 1264px #FFF, 1264px 354px #FFF;
+    animation: animStar 100s linear infinite;
+}
+
+.stars-medium:after {
+    content: " ";
+    position: absolute;
+    top: 2000px;
+    width: 2px;
+    height: 2px;
+    background: transparent;
+    box-shadow: 644px 322px #FFF, 934px 621px #FFF, 192px 259px #FFF, 1854px 1264px #FFF, 1264px 354px #FFF;
+}
+
+.planet-1 {
+    width: 300px;
+    height: 300px;
+    position: absolute;
+    top: 5%;
+    right: 5%;
+    background: url('assets/earth.png') no-repeat center center;
+    background-size: contain;
+    border-radius: 50%;
+    box-shadow: -20px -20px 50px rgba(0, 0, 0, 0.8) inset, 0 0 20px rgba(0, 162, 255, 0.3);
+    opacity: 0.9;
+    animation: rotateEarth 200s linear infinite;
+}
+
+.nebula-1 {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background: url('assets/galaxy.png') no-repeat center center;
+    background-size: cover;
+    opacity: 0.4;
+    mix-blend-mode: screen;
+    animation: pulseNebula 20s ease-in-out infinite;
+}
+
+/* Shooting Star */
+.shooting-star {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1), 0 0 0 8px rgba(255, 255, 255, 0.1), 0 0 20px rgba(255, 255, 255, 1);
+    animation: animateShootingStar 3s linear infinite;
+    opacity: 0;
+}
+
+.shooting-star::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 300px;
+    height: 1px;
+    background: linear-gradient(90deg, #fff, transparent);
+}
+
+.shooting-star:nth-child(1) {
+    top: 0;
+    right: 0;
+    left: initial;
+    animation-delay: 0s;
+    animation-duration: 3s;
+}
+
+.shooting-star:nth-child(2) {
+    top: 0;
+    right: 80px;
+    left: initial;
+    animation-delay: 2.2s;
+    animation-duration: 5s;
+}
+
+.shooting-star:nth-child(3) {
+    top: 80px;
+    right: 0px;
+    left: initial;
+    animation-delay: 5.4s;
+    animation-duration: 4s;
+}
+
+/* Music Button Pulse */
+.btn-music {
+    font-size: 1.2rem;
+    padding: 5px 10px;
+    margin-right: 15px;
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+}
+
+.btn-music.playing {
+    animation: pulseMusic 1.5s infinite;
+    box-shadow: 0 0 15px var(--neon-green);
+    background: rgba(0, 255, 136, 0.1);
+}
+
+@keyframes pulseMusic {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes animStar {
+    from {
+        transform: translateY(0px);
+    }
+
+    to {
+        transform: translateY(-2000px);
+    }
+}
+
+@keyframes floatPlanet {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-30px) rotate(5deg);
+    }
+}
+
+@keyframes pulseNebula {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(1.1);
+    }
+}
+
+@keyframes animateShootingStar {
+    0% {
+        transform: rotate(315deg) translateX(0);
+        opacity: 1;
+    }
+
+    70% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: rotate(315deg) translateX(-1000px);
+        opacity: 0;
+    }
 }
 
 .container {
@@ -77,7 +280,40 @@ body {
     }
 }
 
-/* Add Button */
+/* Auth Controls */
+.auth-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.btn-auth {
+    background: transparent;
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-family: 'Orbitron', sans-serif;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: 0.3s;
+}
+
+.btn-auth:hover {
+    background: rgba(0, 243, 255, 0.1);
+    box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+.user-email {
+    color: var(--neon-purple);
+    font-size: 0.8rem;
+    margin-right: 15px;
+    font-family: 'Rajdhani', sans-serif;
+    text-shadow: 0 0 5px var(--neon-purple);
+    font-weight: bold;
+}
+
+/* Add Button - Hidden by default for guests */
 .btn-add {
     background: linear-gradient(45deg, var(--neon-purple), var(--neon-cyan));
     border: none;
@@ -95,6 +331,13 @@ body {
 .btn-add:hover {
     transform: scale(1.05);
     box-shadow: 0 0 25px rgba(188, 19, 254, 0.6);
+}
+
+/* Admin Utility - Hide edit actions for guests */
+body:not(.is-admin) .btn-edit,
+body:not(.is-admin) .btn-delete,
+body:not(.is-admin) .btn-add {
+    display: none !important;
 }
 
 /* Zoom Controls */
@@ -234,115 +477,83 @@ body {
     box-shadow: 0 0 5px var(--line-color);
 }
 
-/* Card Design */
+/* Card Design - Glassmorphism */
 .card {
     display: inline-block;
-    padding: 10px 12px;
-    margin: 0 5px;
+    padding: 15px 20px;
+    margin: 0 10px;
     text-decoration: none;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+
+    /* Glass Effect */
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
-    border-radius: 12px;
-    transition: all 0.3s;
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+
+    border-radius: 16px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
-    width: 120px;
-    max-width: 120px;
+    width: 140px;
+    max-width: 140px;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
     overflow: visible;
 }
 
-/* Collapse Button */
+/* Collapse Button adjustment */
 .collapse-btn {
-    position: absolute;
-    bottom: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 24px;
-    height: 24px;
-    border: 2px solid var(--neon-cyan);
-    background: var(--bg-dark);
-    color: var(--neon-cyan);
-    font-size: 0.7rem;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 15;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    bottom: -15px;
+    background: rgba(5, 10, 20, 0.8);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(0, 243, 255, 0.5);
 }
 
-.collapse-btn:hover {
-    background: rgba(0, 243, 255, 0.3);
-    box-shadow: 0 0 10px var(--neon-cyan);
-    transform: translateX(-50%) scale(1.1);
+/* Hover Effect - Premium Glow */
+.card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-8px) scale(1.05);
+    box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 243, 255, 0.4),
+        inset 0 0 20px rgba(255, 255, 255, 0.05);
+    border-color: rgba(0, 243, 255, 0.5);
+    z-index: 20;
 }
 
-/* Collapsed State */
-.children-branch {
-    transition: all 0.3s ease;
+/* Active Neon Pulsing for Living Members (replaced rotating border) */
+.card:not(.deceased) {
+    animation: floatingCard 4s ease-in-out infinite;
 }
 
-.children-branch.collapsed {
-    display: none !important;
-}
-
-/* Rotating Neon Border for Living Members */
 .card:not(.deceased)::before {
     content: '';
     position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg,
-            var(--neon-cyan),
-            var(--neon-purple),
-            var(--neon-green),
-            var(--neon-cyan));
-    background-size: 400% 400%;
-    border-radius: 17px;
-    z-index: -1;
-    animation: neonRotate 3s linear infinite;
-    opacity: 0.7;
+    inset: -1px;
+    border-radius: 16px;
+    padding: 1px;
+    background: linear-gradient(45deg, transparent, rgba(0, 243, 255, 0.3), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 1;
+    pointer-events: none;
 }
 
-.card:not(.deceased)::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    right: 2px;
-    bottom: 2px;
-    background: var(--bg-dark);
-    border-radius: 13px;
-    z-index: -1;
-}
-
-@keyframes neonRotate {
+@keyframes floatingCard {
     0% {
-        background-position: 0% 50%;
-        filter: hue-rotate(0deg);
+        transform: translateY(0);
     }
 
     50% {
-        background-position: 100% 50%;
+        transform: translateY(-5px);
     }
 
     100% {
-        background-position: 0% 50%;
-        filter: hue-rotate(360deg);
+        transform: translateY(0);
     }
-}
-
-.card:hover {
-    background: rgba(0, 243, 255, 0.1);
-    border-color: var(--neon-cyan);
-    box-shadow: 0 0 15px var(--neon-cyan), inset 0 0 10px rgba(0, 243, 255, 0.2);
-    transform: translateY(-5px) scale(1.05);
-    z-index: 10;
 }
 
 /* Deceased Member Styling */

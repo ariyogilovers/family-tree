@@ -502,12 +502,31 @@ body:not(.is-admin) .btn-add {
     overflow: visible;
 }
 
+.children-branch.collapsed {
+    display: none !important;
+}
+
 /* Collapse Button adjustment */
 .collapse-btn {
+    position: absolute;
     bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 100;
+    /* High z-index to ensure clickability */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: var(--neon-cyan);
     background: rgba(5, 10, 20, 0.8);
     backdrop-filter: blur(4px);
     border: 1px solid rgba(0, 243, 255, 0.5);
+    transition: all 0.3s;
 }
 
 /* Hover Effect - Premium Glow */

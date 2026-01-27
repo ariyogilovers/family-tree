@@ -628,16 +628,19 @@ function renderCard(member, isSpouse = false, hasChildren = false) {
 }
 
 function setupCardClickHandlers() {
+    // 1. Collapse Buttons (Handled via inline onclick for better reliability)
+
+
+    // 2. Member Cards
     document.querySelectorAll('.card').forEach(card => {
         card.addEventListener('click', (e) => {
-            if (e.target.closest('.collapse-btn')) return; // Ignore collapse button
+            // Safety check: if click originated from button, ignore (though stopPropagation should handle it)
+            if (e.target.closest('.collapse-btn')) return;
 
             const id = parseInt(card.dataset.id);
             const memberMarga = card.dataset.marga;
 
-            // Logic: 
-            // 1. If member has a Marga AND it's different from current view -> Switch View
-            // 2. Otherwise -> Show Details
+            console.log('Card clicked:', id);
 
             if (memberMarga && memberMarga.toLowerCase() !== currentMarga.toLowerCase()) {
                 switchMarga(memberMarga);
@@ -649,17 +652,21 @@ function setupCardClickHandlers() {
 }
 
 function toggleBranch(event, parentId) {
-    event.stopPropagation();
+    // Branch logic matches HTML structure
     const branch = document.querySelector(`.children-branch[data-parent="${parentId}"]`);
     const btn = document.querySelector(`.collapse-btn[data-parent-id="${parentId}"]`);
 
     if (branch) {
         branch.classList.toggle('collapsed');
-        if (branch.classList.contains('collapsed')) {
-            btn.textContent = '▶';
-        } else {
-            btn.textContent = '▼';
+        const isCollapsed = branch.classList.contains('collapsed');
+
+        console.log(`Branch ${parentId} is now ${isCollapsed ? 'collapsed' : 'expanded'}`);
+
+        if (btn) {
+            btn.textContent = isCollapsed ? '▶' : '▼';
         }
+    } else {
+        console.warn('Branch not found for parent:', parentId);
     }
 }
 

@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startLiveClock();
     setupZoomControls();
     setupMusicControl();
+    setupAutoSave();
 
     // Auth Listener
     supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -383,6 +384,7 @@ async function handleFormSubmit(e) {
     try {
         await saveMember(data);
         closeModal('formModal');
+        clearDraft(); // Clear draft on success
         await loadFamilyData();
         saveBtn.textContent = originalText;
         // Optional: alert('Data berhasil disimpan!'); 
@@ -740,6 +742,17 @@ function openFormModal(id = null) {
         document.getElementById('inputSpouse').value = "";
     }
 
+    // Auto-Save Setup
+    // Ensure listeners are attached (safe to call multiple times as long as we don't duplicate logic, 
+    // but better to call once. Here strict simplicity: we just call setupAutoSave which adds listeners.)
+    // Ideally, setupAutoSave should be called once in DOMContentLoaded.
+    // Let's rely on calling it here for now or move it to init.
+
+    // NEW LOGIC: Load Draft ONLY if adding new member
+    if (!id) {
+        loadDraft();
+    }
+
     formModal.style.display = 'block';
 }
 
@@ -790,4 +803,68 @@ async function handleDelete() {
         console.error('Failed to delete:', error);
         alert('Gagal menghapus data: ' + error.message);
     }
+}
+
+// --- Persistence Features ---
+function saveDraft() {
+    const draft = {
+        name: document.getElementById('inputName').value,
+        role: document.getElementById('inputRole').value,
+        marga: document.getElementById('inputMarga').value,
+        ttl: document.getElementById('inputTTL').value,
+        address: document.getElementById('inputAddress').value,
+        hp: document.getElementById('inputHP').value,
+        ktp: document.getElementById('inputKTP').value,
+        photo: document.getElementById('inputPhoto').value,
+        parent_id: document.getElementById('inputParent').value,
+        spouse_id: document.getElementById('inputSpouse').value,
+        birth_order: document.getElementById('inputBirthOrder').value,
+        generation: document.getElementById('inputGeneration').value,
+        is_deceased: document.getElementById('inputDeceased').checked,
+        death_year: document.getElementById('inputDeathYear').value
+    };
+    localStorage.setItem('memberDraft', JSON.stringify(draft));
+}
+
+function loadDraft() {
+    const draftJson = localStorage.getItem('memberDraft');
+    if (!draftJson) return;
+
+    try {
+        const draft = JSON.parse(draftJson);
+        document.getElementById('inputName').value = draft.name || '';
+        document.getElementById('inputRole').value = draft.role || '';
+        document.getElementById('inputMarga').value = draft.marga || '';
+        document.getElementById('inputTTL').value = draft.ttl || '';
+        document.getElementById('inputAddress').value = draft.address || '';
+        document.getElementById('inputHP').value = draft.hp || '';
+        document.getElementById('inputKTP').value = draft.ktp || '';
+        document.getElementById('inputPhoto').value = draft.photo || '';
+
+        if (draft.birth_order) document.getElementById('inputBirthOrder').value = draft.birth_order;
+        if (draft.generation) document.getElementById('inputGeneration').value = draft.generation;
+
+        document.getElementById('inputDeceased').checked = draft.is_deceased || false;
+        if (draft.death_year) document.getElementById('inputDeathYear').value = draft.death_year;
+
+        if (draft.parent_id) document.getElementById('inputParent').value = draft.parent_id;
+        if (draft.spouse_id) document.getElementById('inputSpouse').value = draft.spouse_id;
+
+        toggleDeathYear();
+        console.log('Draft loaded');
+    } catch (e) {
+        console.error('Failed to load draft', e);
+    }
+}
+
+function clearDraft() {
+    localStorage.removeItem('memberDraft');
+}
+
+function setupAutoSave() {
+    const formInputs = document.querySelectorAll('#memberForm input, #memberForm select');
+    formInputs.forEach(input => {
+        input.addEventListener('input', saveDraft);
+        input.addEventListener('change', saveDraft);
+    });
 }
